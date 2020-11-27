@@ -8,5 +8,6 @@ namespace PNI.Data.Repositories
 {
     class IngredientRepository
     {
+        //add qlqr coisa
     }
 }
