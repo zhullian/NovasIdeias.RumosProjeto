@@ -42,11 +42,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Model\Account.cs" />
-    <Compile Include="Model\Category.cs" />
     <Compile Include="Model\Comment.cs" />
     <Compile Include="Model\Ingredient.cs" />
     <Compile Include="Model\Recipe.cs" />
     <Compile Include="Model\User.cs" />
+    <Compile Include="Model\Util\Category.cs" />
     <Compile Include="Model\Util\Difficulty.cs" />
     <Compile Include="Model\Util\Gender.cs" />
     <Compile Include="Model\Util\Rating.cs" />

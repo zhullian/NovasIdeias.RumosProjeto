@@ -18,6 +18,7 @@ namespace PNI.Model.Model
         public Gender Gender { get; set; }
         public string Email { get; set; }
         public bool IsAdmin { get; set; }
+        public  bool Blocked { get; set; }
         public Account Account { get; set; }
         public List<Comment> Comment { get; set; }
 
@@ -36,47 +37,74 @@ namespace PNI.Model.Model
         
         }
         private List<Recipe> _OwnRecipes { get; set; }
-        public List<Recipe> FavouriteList { get; set; }
+        public List<Recipe> FavoriteRecipes { get; set; }
 
+        public override string ToString()
+        {
+            return $"ID: {Id}, {FirstName}, {LastName}, {BirthDate.ToShortDateString()}, {Gender}, {Email}, IsAdmin: {IsAdmin}, Blocked: {Blocked}, Account: {Account}";
+        }
+
+        //Create builders to generate users
         public User()
         {
 
         }
 
-        public User(int id, string firstName, string middleName, string lastName, 
-            DateTime birthDate, Gender gender, string email, bool isAdmin, Account account, 
-            List<Comment> comment, List<Recipe> ownRecipes,  List<Recipe> favouriteList)
+        public User(int idUser, string firstName, string lastName, DateTime birthDate, Gender gender, string email, bool isAdmin, bool blocked, Account account, List<Recipe> ownRecipies, List<Recipe> favoriteRecipies)
         {
-            Id = id;
+            Id = idUser;
             FirstName = firstName;
-            MiddleName = middleName;
             LastName = lastName;
             BirthDate = birthDate;
             Gender = gender;
             Email = email;
             IsAdmin = isAdmin;
+            Blocked = blocked;
             Account = account;
-            Comment = comment;
-            OwnRecipes = ownRecipes;
-            FavouriteList = favouriteList;
+            OwnRecipes = ownRecipies;
+            FavoriteRecipes = favoriteRecipies;
         }
 
-        public User(string firstName, string middleName, string lastName,
-                    DateTime birthDate, Gender gender, string email)
+        public User(int idUser, string firstName, string lastName, DateTime birthDate, string email, bool isAdmin, bool blocked, Account account)
         {
-           
+            Id = idUser;
             FirstName = firstName;
-            MiddleName = middleName;
+            LastName = lastName;
+            BirthDate = birthDate;
+            Email = email;
+            Blocked = blocked;
+            Account = account;
+            IsAdmin = isAdmin;
+        }
+
+        public User(string firstName, string lastName, DateTime birthDate, Gender gender, string email)
+        {
+            FirstName = firstName;
             LastName = lastName;
             BirthDate = birthDate;
             Gender = gender;
             Email = email;
         }
 
-        public override string ToString()
+        public User(string firstName, string lastName, DateTime birthDate, Gender gender, string email, bool isAdmin)
         {
-            return $"{Id} {FirstName} {MiddleName} {LastName} {BirthDate.ToShortDateString()} {Gender} {Email} {IsAdmin} {Account}";
+            FirstName = firstName;
+            LastName = lastName;
+            BirthDate = birthDate;
+            Gender = gender;
+            Email = email;
+            IsAdmin = isAdmin;
+        }
 
+        public User(string firstName, string lastName, DateTime birthDate, Gender gender, string email, bool isAdmin, bool blocked)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            BirthDate = birthDate;
+            Gender = gender;
+            Email = email;
+            IsAdmin = isAdmin;
+            Blocked = blocked;
         }
     }
 }

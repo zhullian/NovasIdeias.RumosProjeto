@@ -12,12 +12,12 @@ namespace PNI.Services.Services
     {
 
         private UserRepository _repo;
-        //private AccountRepository _accountRepo;
+        private AccountRepository _accountRepo;
 
         public UserServices()
         {
             _repo = new UserRepository();
-            //_accountRepo = new AccountRepository();
+            _accountRepo = new AccountRepository();
         }
 
         public List<User> GetAll()
@@ -33,23 +33,36 @@ namespace PNI.Services.Services
         public void Add(User user)
         {
             if (user == null)
-                throw new Exception("you must be an registered user");
-            //if (user.Account == null)
-            //    throw new Exception("é obrigatório ter uma account");
-            //if (_accountRepo.UsernameCheck(user.Account.Username))
-            //    throw new Exception("Username already exists");
+                throw new Exception("User can't be null");
+
+            if (user.FirstName == null)
+                throw new Exception("User Name can't be null");
 
             _repo.Add(user);
-        }
-        public void Update(User user)
-        {
-            _repo.Update(user);
+
+            user.Account.User = user;
+            Console.WriteLine(user);
+            _accountRepo.Add(user.Account);
         }
 
-        public void Remove(User user)
+        public void AddAdmin(User user)
         {
-            _repo.Remove(user);
+            if (user == null)
+                throw new Exception("User can't be null");
+
+            if (user.FirstName == null)
+                throw new Exception("User Name can't be null");
+
+            _repo.AddAdmin(user);
+
+            user.Account.User = user;
+
+            _accountRepo.Add(user.Account);
+
         }
+        
+
+
     }
 }
 

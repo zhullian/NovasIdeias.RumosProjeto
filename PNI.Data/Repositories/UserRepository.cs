@@ -13,194 +13,341 @@ namespace PNI.Data.Repositories
 {
     public class UserRepository
     {
-        
-        private static string _cs = ConfigurationManager.ConnectionStrings["NovasIdeiasCs"].ConnectionString;
-
-        private static int _colUserId = 0;
-        private static int _colUserFirstName = 1;
-        private static int _colUserMiddleName = 2;
-        private static int _colUserLastName = 3;
-        private static int _colUserBirthDate = 4;
-        private static int _colUserEmail = 5;
-        private static int _colUserGender = 6;
-        private static int _colUserIsAdmin = 7;
 
 
-        //GET ALL USERS FROM DB
+        //MSSQL connection string
+        private static string _connectionString;
+
+        public UserRepository()
+        {
+            _connectionString = ConfigurationManager.ConnectionStrings["NovasIdeiasCS"].ConnectionString;
+        }
+
+        //MSSQL Table Users_tbl
+        private static int _colIdUser = 0;
+        private static int _colFirstName = 1;
+        private static int _colLastName = 2;
+        private static int _colBirthDate = 3;
+        private static int _colGender = 4;
+        private static int _colEmail = 5;
+        private static int _colIdAccount = 6;
+        private static int _IdRecipe = 7;
+        private static int _colIsAdmin = 8;
+        private static int _colBlocked = 9;
+        private static int _colMembershipUsername = 10;
+
+        //Get all users from Database
         public List<User> GetAll()
         {
-           
-            List<User> allUser = new List<User>();
+            List<User> users = new List<User>();
+
             //CONNECTION
-            using (SqlConnection connection = new SqlConnection(_cs))
+            using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                //GIVE THE COMMAND
+
+                //COMMAND                 
                 SqlCommand cmd = connection.CreateCommand();
 
-                //SQL QUERY TO SELECT ALL USERS FROM DB
+                //Query to select all users from Database
                 cmd.CommandText = "spGetAllUsers";
                 cmd.CommandType = CommandType.StoredProcedure;
 
+
                 //EXECUTE
                 connection.Open();
 
-                SqlDataReader dr = cmd.ExecuteReader();
+                SqlDataReader dataReader = cmd.ExecuteReader();
 
-                while (dr.Read())
+                while (dataReader.Read())
                 {
                     User user = new User();
 
-                    user.Id = dr.GetInt32(_colUserId);
-                    user.FirstName = dr.GetString(_colUserFirstName);
-                    user.MiddleName = dr.IsDBNull(_colUserMiddleName) ? null : dr.GetString(_colUserMiddleName);
-                    user.LastName = dr.GetString(_colUserLastName);
-                    user.BirthDate = dr.GetDateTime(_colUserBirthDate);
-                    user.Email = dr.GetString(_colUserEmail);
-                    var genero = user.Gender = (Gender)dr.GetByte(_colUserGender);
-                    if ((byte)genero == 0)
+                    user.Id = dataReader.GetInt32(_colIdUser);
+                    user.FirstName = dataReader.GetString(_colFirstName);
+                    user.LastName = dataReader.GetString(_colLastName);
+                    user.BirthDate = dataReader.GetDateTime(_colBirthDate);
+
+                    //Convert GetByte (Tinyint) into Gender Enum (0.1.2.3)
+                    var enumGender = user.Gender = dataReader.IsDBNull(_colGender) ? 0 : (Gender)dataReader.GetByte(_colGender);
+                    if ((byte)enumGender == 1)
                     {
                         Gender gender = Gender.Male;
-
                         user.Gender = gender;
+
                     }
-                    else if ((byte)genero == 1)
+                    else if ((byte)enumGender == 2)
                     {
                         Gender gender = Gender.Female;
+                        user.Gender = gender;
 
-                            user.Gender = gender;
                     }
-                    else
+                    else if ((byte)enumGender >= 3)
                     {
                         Gender gender = Gender.Other;
-                            user.Gender = gender;
+                        user.Gender = gender;
                     }
 
+                    user.Email = dataReader.GetString(_colEmail);
+                    user.Account.Id = dataReader.GetInt32(_colIdAccount);
+                    user.IsAdmin = dataReader.IsDBNull(_colIsAdmin) ? false : dataReader.GetBoolean(_colIsAdmin);
+                    user.Blocked = dataReader.IsDBNull(_colBlocked) ? false : dataReader.GetBoolean(_colBlocked);
 
-                    user.IsAdmin = dr.GetBoolean(_colUserIsAdmin);
-
-                    allUser.Add(user);
+                    users.Add(user);
                 }
-                 
+                return users;
+
             }
-            return allUser;
         }
 
+        //Get user by ID from Database
         public User GetById(int id)
         {
-            SqlParameter idParameter;
+            SqlParameter parameter;
+
             //CONNECTION
-            using (SqlConnection connection = new SqlConnection(_cs))
+            using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                //GIVE COMMAND
-                //SqlCommand cmd = new SqlCommand("spGetUserById", connection);
+
+                //COMMAND                 
+
                 SqlCommand cmd = connection.CreateCommand();
 
-
-                //SQL QUERY SELECT * FROM User_tbl WHERE IdUser = @IdUser
+                //Query to select user by id from Database
                 cmd.CommandText = "spGetUserById";
                 cmd.CommandType = CommandType.StoredProcedure;
 
+                //Access Store Procedure Parameter
+                parameter = new SqlParameter("@IdUser", id);
 
-                /*No idParameter estamos a criar um parametro vazio
-                 * Neste idParameter em baixo indicado estamos a dizer que o parametro em cima invocado
-                 * vai ter como parametros "@IdUser e = id"(substitui em linguagem de C#)
-                 * Estamos a dizer que a direccao do parametro é igual ao da SP
-                 * Por fim estamos a dizer que o tipo de dado do id que está na tabela do SP é int32
-                 */
-                idParameter = new SqlParameter("@IdUser", id);
-                idParameter.Direction = ParameterDirection.Input;
-                idParameter.DbType = DbType.Int32;
-                cmd.Parameters.Add(idParameter);
+                parameter.Direction = ParameterDirection.Input;
+
+                //IdUser DataType in Database
+                parameter.DbType = DbType.Int32;
+
+                cmd.Parameters.Add(parameter);
+
                 //EXECUTE
                 connection.Open();
 
-                SqlDataReader dr = cmd.ExecuteReader();
+                SqlDataReader dataReader = cmd.ExecuteReader();
 
                 User user = null;
-               
-                while (dr.Read())
-                    
+
+                while (dataReader.Read())
                 {
-                   user = new User();
+                    user = new User();
 
-                   user.Id = dr.GetInt32(_colUserId);
-                   user.FirstName = dr.GetString(_colUserFirstName);
-                   user.MiddleName = dr.IsDBNull(_colUserMiddleName) ? null : dr.GetString(_colUserMiddleName);
-                   user.LastName = dr.GetString(_colUserLastName);
-                   user.BirthDate = dr.GetDateTime(_colUserBirthDate);
-                   user.Email = dr.GetString(_colUserEmail);
-                    var genero = user.Gender = (Gender)dr.GetByte(_colUserGender);
-                    if ((byte)genero == 0)
+                    user.Id = dataReader.GetInt32(_colIdUser);
+                    user.FirstName = dataReader.GetString(_colFirstName);
+                    user.LastName = dataReader.GetString(_colLastName);
+                    user.BirthDate = dataReader.GetDateTime(_colBirthDate);
+
+                    //Convert GetByte (Tinyint) into Gender Enum (0.1.2.3)
+                    var enumGender = user.Gender = dataReader.IsDBNull(_colGender) ? 0 : (Gender)dataReader.GetByte(_colGender);
+                    if ((byte)enumGender == 0)
                     {
-                        Gender gender = Gender.Male;
-
+                        Gender gender = Gender.NA;
                         user.Gender = gender;
                     }
-                    else if ((byte)genero == 1)
+                    else if ((byte)enumGender == 1)
+                    {
+                        Gender gender = Gender.Male;
+                        user.Gender = gender;
+
+                    }
+                    else if ((byte)enumGender == 2)
                     {
                         Gender gender = Gender.Female;
-
                         user.Gender = gender;
+
                     }
                     else
                     {
                         Gender gender = Gender.Other;
                         user.Gender = gender;
                     }
-                    user.IsAdmin = dr.GetBoolean(_colUserIsAdmin);
+
+                    user.Email = dataReader.GetString(_colEmail);
+                    user.IsAdmin = dataReader.IsDBNull(_colIsAdmin) ? false : dataReader.GetBoolean(_colIsAdmin);
+                    user.Blocked = dataReader.IsDBNull(_colBlocked) ? false : dataReader.GetBoolean(_colBlocked);
+
                 }
 
                 return user;
             }
-           
+
         }
 
+        //Get User by FirstName from Database
+        public User GetByFirstName(string firstName)
+        {
+            SqlParameter parameter;
+
+            //CONNECTION
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+
+                //COMMAND                 
+
+                SqlCommand cmd = connection.CreateCommand();
+
+                //Query to select user by FirstName from Database
+                cmd.CommandText = "spGetUserByFirstName";
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                //Access Store Procedure Parameter
+                parameter = new SqlParameter("@FirstName", firstName);
+
+                parameter.Direction = ParameterDirection.Input;
+
+                //FirstName DataType in Database
+                parameter.DbType = DbType.String;
+
+                cmd.Parameters.Add(parameter);
+
+                //EXECUTE
+                connection.Open();
+
+                SqlDataReader dataReader = cmd.ExecuteReader();
+
+                User user = null;
+
+                while (dataReader.Read())
+                {
+                    user = new User();
+
+                    user.Id = dataReader.GetInt32(_colIdUser);
+                    user.FirstName = dataReader.GetString(_colFirstName);
+                    user.LastName = dataReader.GetString(_colLastName);
+                    user.BirthDate = dataReader.GetDateTime(_colBirthDate);
+
+                    //Convert GetByte (Tinyint) into Gender Enum (0.1.2.3)
+                    var enumGender = user.Gender = dataReader.IsDBNull(_colGender) ? 0 : (Gender)dataReader.GetByte(_colGender);
+                    if ((byte)enumGender == 1)
+                    {
+                        Gender gender = Gender.Male;
+                        user.Gender = gender;
+
+                    }
+                    else if ((byte)enumGender == 2)
+                    {
+                        Gender gender = Gender.Female;
+                        user.Gender = gender;
+
+                    }
+                    else
+                    {
+                        Gender gender = Gender.Other;
+                        user.Gender = gender;
+                    }
+
+                    user.Email = dataReader.GetString(_colEmail);
+                    user.IsAdmin = dataReader.IsDBNull(_colIsAdmin) ? false : dataReader.GetBoolean(_colIsAdmin);
+                    user.Blocked = dataReader.IsDBNull(_colBlocked) ? false : dataReader.GetBoolean(_colBlocked);
+
+                }
+
+                return user;
+            }
+        }
+
+        //Insert User in Database        
         public void Add(User user)
         {
 
-            using (SqlConnection connection = new SqlConnection(_cs))
+            //CONNECTION
+            using (SqlConnection connection = new SqlConnection(_connectionString))
             {
+
+                //COMMAND                                 
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = connection;
-                cmd.CommandText = "spInsertUser";
 
-                cmd.Parameters.AddWithValue("@FirstName", user.FirstName);
-                cmd.Parameters.AddWithValue("@MiddleName", user.MiddleName);
+                //Query to select all users from Database
+                cmd.CommandText = "spInsertUser";
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                //Add Store Procedure Parameter                
+                SqlParameter nameParam = new SqlParameter();
+                nameParam.ParameterName = "@FirstName";
+                nameParam.Value = user.FirstName;
+                nameParam.SqlDbType = SqlDbType.NVarChar;
+                nameParam.Direction = ParameterDirection.Input;
+
+                cmd.Parameters.Add(nameParam);
                 cmd.Parameters.AddWithValue("@LastName", user.LastName);
                 cmd.Parameters.AddWithValue("@BirthDate", user.BirthDate);
                 cmd.Parameters.AddWithValue("@Gender", user.Gender);
                 cmd.Parameters.AddWithValue("@Email", user.Email);
-                //cmd.Parameters.AddWithValue("@IdAccount", user.Account);
 
-                SqlParameter outParam = new SqlParameter();
-                outParam.ParameterName = "@IdUser";
-                outParam.SqlDbType = SqlDbType.Int;
-                outParam.Direction = ParameterDirection.Output;
+                SqlParameter idParam = new SqlParameter();
+                idParam.ParameterName = "@IdUser";
+                idParam.SqlDbType = SqlDbType.Int;
+                idParam.Direction = ParameterDirection.Output;
 
-                cmd.Parameters.Add(outParam);
+                cmd.Parameters.Add(idParam);
 
+
+                //EXECUTE
                 connection.Open();
 
-                int id = (int)cmd.ExecuteScalar();
+                int affectedRows = cmd.ExecuteNonQuery();
+
+                int id = (int)idParam.Value;
                 user.Id = id;
-                Console.WriteLine(id);
-            }
 
+            }
         }
-        public void Update(User user)
+
+        //Insert Admin in database
+        public void AddAdmin(User user)
         {
-            using (SqlConnection connection = new SqlConnection())
+
+            //CONNECTION
+            using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                //string query = "UPDATE User_tbl SET" +
-                //    //"FirstName =  "
-                                
+
+                //COMMAND                                 
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = connection;
+
+                //Query to insert users in Database
+                cmd.CommandText = "spInsertAdmin";
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                //Add Store Procedure Parameter                
+                SqlParameter nameParam = new SqlParameter();
+                nameParam.ParameterName = "@FirstName";
+                nameParam.Value = user.FirstName;
+                nameParam.SqlDbType = SqlDbType.NVarChar;
+                nameParam.Direction = ParameterDirection.Input;
+
+                cmd.Parameters.Add(nameParam);
+                cmd.Parameters.AddWithValue("@LastName", user.LastName);
+                cmd.Parameters.AddWithValue("@BirthDate", user.BirthDate);
+                cmd.Parameters.AddWithValue("@Gender", user.Gender);
+                cmd.Parameters.AddWithValue("@Email", user.Email);
+                cmd.Parameters.AddWithValue("@IsAdmin", user.IsAdmin);
+
+                SqlParameter idParam = new SqlParameter();
+                idParam.ParameterName = "@IdUser";
+                idParam.SqlDbType = SqlDbType.Int;
+                idParam.Direction = ParameterDirection.Output;
+
+                cmd.Parameters.Add(idParam);
+
+
+                //EXECUTE
+                connection.Open();
+
+                int affectedRows = cmd.ExecuteNonQuery();
+
+                int id = (int)idParam.Value;
+                user.Id = id;
+
+
             }
         }
 
-        public void Remove(User user)
-        {
-
-        }
     }
 }
-

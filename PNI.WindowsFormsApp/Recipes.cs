@@ -10,14 +10,11 @@ using System.Windows.Forms;
 
 namespace PNI.WindowsFormsApp
 {
-    public partial class Form1 : Form
+    public partial class Recipes : Form
     {
-        public Form1()
+        public Recipes()
         {
             InitializeComponent();
         }
-
-        
-      
     }
 }

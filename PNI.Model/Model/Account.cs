@@ -11,21 +11,14 @@ namespace PNI.Model.Model
         public int Id { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
+        public User User { get; set; }
 
-
-        public Account()
+        public override string ToString()
         {
-
-        }
-
-        public Account(int id, string username, string password)
-        {
-            Id = id;
-            Username = username;
-            Password = password;
-
+            return $"{Id}, {Username}, {Password}";
         }
     }
+}
 
 
 

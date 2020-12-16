@@ -12,15 +12,16 @@ namespace PNI.Data.Repositories
 {
     public class AccountRepository
     {
-        private static string _cs = ConfigurationManager.ConnectionStrings["NovasIdeiasCs"].ConnectionString;
+        private static string _cs;
         private static int _colAccountId = 0;
-        private static int _colaccountAccountUsername = 1;
-        private static int _colaccountAccountPassword = 2;
+        private static int _colAccountUsername = 1;
+        private static int _colAccountPassword = 2;
+        private static int _colUserID = 3;
 
 
         public AccountRepository()
         {
-            
+            _cs = ConfigurationManager.ConnectionStrings["NovasIdeiasCs"].ConnectionString;
         }
 
         public List<Account> GetAll()
@@ -74,57 +75,55 @@ namespace PNI.Data.Repositories
 
                 SqlDataReader dr = cmd.ExecuteReader();
 
-                account account = null;
+                Account account = null;
 
                 while (dr.Read())
 
                 {
-                    account = new account();
+                    account = new Account();
 
-                    account.Id = dr.GetInt32(_colaccountId);
-                    account.FirstName = dr.GetString(_colaccountFirstName);
-                    account.MiddleName = dr.IsDBNull(_colaccountMiddleName) ? null : dr.GetString(_colaccountMiddleName);
-                    account.LastName = dr.GetString(_colaccountLastName);
-                    account.BirthDate = dr.GetDateTime(_colaccountBirthDate);
-                    account.Email = dr.GetString(_colaccountEmail);
-                    var genero = account.Gender = (Gender)dr.GetByte(_colaccountGender);
-                    if ((byte)genero == 0)
-                    {
-                        Gender gender = Gender.Male;
-
-                        account.Gender = gender;
-                    }
-                    else if ((byte)genero == 1)
-                    {
-                        Gender gender = Gender.Female;
-
-                        account.Gender = gender;
-                    }
-                    else
-                    {
-                        Gender gender = Gender.Other;
-                        account.Gender = gender;
-                    }
-                    account.IsAdmin = dr.GetBoolean(_colaccountIsAdmin);
+                    account.Id = dr.GetInt32(_colAccountId);
+                    account.Username = dr.GetString(_colAccountUsername);
+                    account.Password = dr.GetString(_colAccountPassword);
+                    
+                    
                 }
 
                 return account;
             }
         }
 
-        public void Add(Account Account)
+        public void Add(Account account)
         {
-           
-        }
-        public void Update(Account Account)
-        {
-            
-        }
+            using (SqlConnection connection = new SqlConnection(_cs))
+            {
+                //COMMAND
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = connection;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "spInsertAccount";
 
-        public void Remove(Account Account)
-        {
-            
+                cmd.Parameters.AddWithValue("@UserName", account.Username);
+                cmd.Parameters.AddWithValue("@Password", account.Password);
+                cmd.Parameters.AddWithValue("@UserId", account.User.Id);
+
+                SqlParameter idParam = new SqlParameter();
+                idParam.ParameterName = "@IdAccount";
+                idParam.SqlDbType = SqlDbType.Int;
+                idParam.Direction = ParameterDirection.Output;
+
+                cmd.Parameters.Add(idParam);
+
+                //EXECUTE
+                connection.Open();
+
+                int affectedRows = cmd.ExecuteNonQuery();
+
+                int id = (int)idParam.Value;
+                account.Id = id;
+            }
         }
+        
 
         public bool accountnameCheck (string accountname )
         {
